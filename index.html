@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TV Suprimentos Agrícola</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#E6E9DD; --card:#FFFFFF;
+  --or:#FF7500; --or2:#FF9E1B; --orc:#FF8200;
+  --neu:#CDD2BA; --g1:#00B74F; --g2:#00843D; --g3:#154734;
+  --red:#D7261E; --ink:#1D2417; --mut:#5B6448;
+  --font:'DIN','DIN Pro','Barlow Condensed','Barlow',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:var(--font);color:var(--ink)}
+#stage{position:fixed;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center center;
+  display:grid;grid-template-columns:120px 1fr;grid-template-rows:110px 1fr 96px;background:var(--bg)}
+
+/* CABEÇALHO */
+header{grid-column:1/3;display:grid;grid-template-columns:120px minmax(0,1fr) auto;background:#fff;box-shadow:0 4px 14px rgba(21,71,52,.08);z-index:2}
+.hicon{background:var(--or);display:flex;align-items:center;justify-content:center;color:#fff}
+.hicon svg{width:62px;height:62px}
+.htitle{display:flex;align-items:center;gap:22px;padding-left:30px;min-width:0}
+.htitle h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:42px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
+.tag{white-space:nowrap;flex:none;font-size:18px;font-weight:700;letter-spacing:.08em;color:var(--or);border:2px solid var(--or);border-radius:30px;padding:4px 14px}
+.hright{display:flex;align-items:center;gap:30px;padding-right:36px}
+.pill{display:flex;align-items:center;background:var(--g3);border-radius:40px;overflow:hidden;font-weight:700}
+.pill span:first-child{background:var(--g2);color:#fff;padding:10px 18px;font-size:18px;letter-spacing:.06em;border-radius:40px}
+.pill span:last-child{color:#fff;padding:10px 22px 10px 16px;font-size:24px}
+.clock{text-align:right;line-height:1}
+.clock b{display:block;font-size:56px;font-weight:700;color:var(--g3);font-variant-numeric:tabular-nums}
+.clock small{font-size:20px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+
+/* MENU */
+aside{background:var(--neu);display:flex;flex-direction:column;padding-top:4px;overflow:hidden;min-height:0}
+.mi{height:86px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--or);transition:background .3s}
+.mi svg{width:36px;height:36px}
+.mi span{font-size:13px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:0;text-align:center;line-height:1.05}
+.mi.on{background:#fff}
+
+/* TELAS */
+main{position:relative;padding:28px}
+.screen{position:absolute;inset:28px;display:grid;gap:24px;opacity:0;visibility:hidden;transition:opacity .7s ease,visibility .7s}
+.screen.on{opacity:1;visibility:visible}
+.screen>*{min-width:0}
+.card{background:var(--card);border-radius:20px;padding:24px 28px;display:flex;flex-direction:column;min-height:0;box-shadow:0 2px 10px rgba(21,71,52,.05)}
+.ct{font-size:26px;font-weight:700;letter-spacing:.04em;color:var(--g3);text-transform:uppercase;text-align:center;margin-bottom:10px}
+.cw{position:relative;flex:1;min-height:0}
+.col{display:flex;flex-direction:column;gap:24px;min-height:0}
+.col>.card{flex:1}
+
+/* KPI */
+.kpi{position:relative;padding:24px 30px 22px 46px;justify-content:space-between}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:16px;border-radius:20px 0 0 20px;background:var(--neu)}
+.s-ok::before{background:var(--g1)} .s-at::before{background:var(--or2)} .s-cr::before{background:var(--red)}
+.kl{font-size:27px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--mut);line-height:1.1}
+.kv{font-size:118px;font-weight:700;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kv small{font-size:.42em;font-weight:700;margin-left:6px;color:var(--mut)}
+.s-cr .kv{color:var(--red)}
+.kf{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.meta{font-size:24px;font-weight:600;color:var(--mut)}
+.chip{font-size:20px;font-weight:700;letter-spacing:.06em;padding:6px 16px;border-radius:30px;color:#fff}
+.s-ok .chip{background:var(--g2)} .s-at .chip{background:var(--or2);color:var(--ink)} .s-cr .chip{background:var(--red)}
+.ks{font-size:22px;font-weight:600;color:var(--mut);margin-top:4px}
+.kpi.sm .kv{font-size:92px}
+
+/* LISTAS GRANDES */
+.rows{display:flex;flex-direction:column;justify-content:space-around;flex:1}
+.ar{display:grid;grid-template-columns:120px 1fr;gap:22px;align-items:center}
+.badge{height:84px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:700;color:#fff}
+.badge small{font-size:22px;margin-left:3px}
+.ar b{display:block;font-size:32px;font-weight:700;line-height:1.05}
+.ar span{font-size:24px;font-weight:600;color:var(--mut)}
+.pr{display:grid;grid-template-columns:1fr 130px;gap:6px 22px;align-items:center}
+.pr .nm{font-size:28px;font-weight:700}
+.pr .nm em{font-style:normal;font-weight:600;color:var(--mut);font-size:22px;margin-left:10px}
+.pr .pc{grid-row:1/3;grid-column:2;font-size:52px;font-weight:700;text-align:right}
+.track{height:28px;border-radius:14px;background:var(--bg);overflow:hidden}
+.fill{height:100%;border-radius:14px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.leg{display:flex;gap:28px;justify-content:center;font-size:22px;font-weight:700;color:var(--mut);text-transform:uppercase;margin-bottom:6px}
+.leg i{display:inline-block;width:18px;height:18px;border-radius:50%;margin-right:8px;vertical-align:-2px}
+.dleg{display:flex;flex-direction:column;justify-content:center;gap:14px;font-size:24px;font-weight:700}
+.dleg div{display:flex;align-items:center;gap:12px}
+.dleg i{width:22px;height:22px;border-radius:6px;flex:none}
+.dleg span{margin-left:auto;color:var(--mut)}
+.big{font-size:150px;font-weight:700;line-height:1;text-align:center}
+.bigsub{font-size:28px;font-weight:700;color:var(--mut);text-align:center;text-transform:uppercase}
+.bars2{display:flex;flex-direction:column;gap:26px;margin-top:20px}
+.bars2 label{display:flex;justify-content:space-between;font-size:26px;font-weight:700;margin-bottom:8px;text-transform:uppercase}
+
+/* SPARKLINES E MERCADO */
+.spark{position:relative;height:78px;margin:4px -6px 2px}
+.mk{padding:20px 22px 18px;gap:4px}
+.mh{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.mn{font-size:25px;font-weight:700;text-transform:uppercase;color:var(--g3);line-height:1.05}
+.src{font-size:14px;font-weight:700;letter-spacing:.05em;color:var(--mut);background:var(--bg);border-radius:20px;padding:4px 10px;white-space:nowrap}
+.src.live{background:var(--g2);color:#fff;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.6}}
+.mv{font-size:56px;font-weight:700;line-height:1;margin-top:8px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.mv small{font-size:.42em;color:var(--mut);margin-left:4px}
+.mx{font-size:24px;font-weight:700}
+.mk .spark{flex:1;height:auto;min-height:90px}
+.imp{font-size:19px;font-weight:600;color:var(--mut);line-height:1.15;border-top:2px solid var(--bg);padding-top:8px}
+.tt i{font-style:normal;color:var(--neu);margin-right:6px}
+
+/* RELAÇÃO DE FORNECEDORES */
+.sch,.scr{display:grid;grid-template-columns:60px minmax(0,1.45fr) 1.15fr 1fr .8fr .85fr 130px;gap:22px;align-items:center}
+.sch{font-size:18px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;padding:2px 0 10px;border-bottom:3px solid var(--bg)}
+.scr{flex:1;border-bottom:2px solid var(--bg)} .scr:last-child{border-bottom:0}
+.rk{width:56px;height:56px;border-radius:14px;background:var(--or);color:#fff;font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.fn{min-width:0} .fn b{display:block;font-size:31px;font-weight:700;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fn span{font-size:20px;color:var(--mut);font-weight:600}
+.vv{font-size:40px;font-weight:700;line-height:1;white-space:nowrap} .vv small{font-size:.5em;color:var(--mut);margin-left:4px}
+.vs{font-size:18px;font-weight:600;color:var(--mut);margin-top:5px;white-space:nowrap}
+.minibar{height:12px;border-radius:6px;background:var(--bg);margin-top:8px;overflow:hidden} .minibar div{height:100%;border-radius:6px;background:var(--or)}
+.nota{width:96px;height:96px;border-radius:50%;border:10px solid;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:700;justify-self:center}
+.kpi.xs{padding:18px 24px 16px 40px} .kpi.xs .kv{font-size:76px} .kpi.xs .kl{font-size:22px} .kpi.xs .meta{font-size:20px} .kpi.xs .chip{font-size:16px;padding:4px 12px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:24px;min-height:0}
+
+/* RODAPÉ */
+footer{grid-column:1/3;display:grid;grid-template-rows:6px 54px 36px;background:var(--g3)}
+.prog{background:rgba(255,255,255,.12)}
+.prog div{height:100%;background:var(--or);transform-origin:left;transform:scaleX(0)}
+.ticker{display:flex;overflow:hidden}
+.tl{background:var(--or);color:#fff;font-size:24px;font-weight:700;letter-spacing:.08em;display:flex;align-items:center;gap:10px;padding:0 26px;flex:none;z-index:1}
+.tl svg{width:28px;height:28px}
+.tw{flex:1;overflow:hidden;position:relative}
+.tt{position:absolute;white-space:nowrap;top:50%;transform:translateY(-50%);font-size:27px;font-weight:600;color:#fff;animation:roll linear infinite}
+.tt b{color:var(--or2);margin:0 26px}
+@keyframes roll{from{left:100%}to{left:0;transform:translate(-100%,-50%)}}
+.cred{display:flex;justify-content:space-between;align-items:center;padding:0 26px;background:#0f3527;color:rgba(255,255,255,.75);font-size:18px;font-weight:600;letter-spacing:.03em}
+.cred b{color:#fff}
+#pz{display:none;color:var(--or2);font-weight:700}
+body.paused #pz{display:inline}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <div class="hicon" id="hicon"></div>
+    <div class="htitle"><h1 id="htitle">Suprimentos Agrícola</h1></div>
+    <div class="hright">
+      <div class="pill"><span>DADOS ATUALIZADOS EM</span><span id="upd"></span></div>
+      <div class="clock"><b id="hora">--:--</b><small id="data"></small></div>
+    </div>
+  </header>
+  <aside id="menu"></aside>
+  <main id="main"></main>
+  <footer>
+    <div class="prog"><div id="bar"></div></div>
+    <div class="ticker">
+      <div class="tl"><svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M10.3 3.2a2 2 0 0 1 3.4 0l8.4 14.6A2 2 0 0 1 20.4 21H3.6a2 2 0 0 1-1.7-3.2zM11 9v5h2V9zm0 7v2h2v-2z"/></svg>ALERTAS</div>
+      <div class="tw"><div class="tt" id="tt"></div></div>
+    </div>
+    <div class="cred"><span>Desenvolvido por <b>Marcelo José Gomes Parreira</b> · Suprimentos Agrícola · Unidade Iturama · <b style="color:var(--or2)">PROTÓTIPO COM DADOS FICTÍCIOS</b></span><span><span id="pz">⏸ PAUSADO · </span>← → navegar · ESPAÇO pausa · F tela cheia</span></div>
+  </footer>
+</div>
+
+<script>
+/* =========================================================
+   DADOS (fictícios) — trocar pelos exports do SAP depois
+   ========================================================= */
+const D = {
+  atualizado: '16/10/2026 07:30',
+  resumo:   {rcAbertas:184, rcAntigas:37, atrasadasPct:11.2, otif:87.4, lead:5.6, saving:1.27, contrato:58, emerg:7.8},
+  metas:    {rcAbertas:170, rcAntigas:20, atrasadasPct:8,    otif:92,   lead:5,   saving:1.0,  contrato:60, emerg:10},
+  anterior: {rcAbertas:162, rcAntigas:29, atrasadasPct:9.6,  otif:89.1, lead:6.1, saving:0.94, contrato:55, emerg:9.2},
+  aging: {labels:['0–7 DIAS','8–15 DIAS','16–30 DIAS','+30 DIAS'], v:[92,55,24,13]},
+  compradores: {labels:['CARLOS','FERNANDA','JULIANO','PATRÍCIA','RENATO','SIMONE'], v:[41,36,33,29,25,20]},
+  idadeMedia: 9.4,
+  pedidos: {abertos:412, valor:18.4, atrasados:46, valorAtras:2.1, semana:128},
+  entregas: {labels:['HOJE','SÁB 17','DOM 18','SEG 19','TER 20','QUA 21','QUI 22'], v:[22,6,2,31,27,21,19]},
+  atrasos: [
+    {f:'FERTIMINAS',m:'Cloreto de potássio',d:12},
+    {f:'TRATORPEÇAS LTDA',m:'Faca de corte da colhedora',d:9},
+    {f:'QUÍMICA PARANAÍBA',m:'Herbicida pós-emergente',d:7},
+    {f:'HIDRÁULICA TRIÂNGULO',m:'Mangueira hidráulica',d:5},
+    {f:'BORRACHAS IT',m:'Pneu agrícola 23.1-26',d:3}
+  ],
+  otifMes: {labels:['ABR','MAI','JUN','JUL','AGO','SET','OUT'], v:[90.2,91.5,88.7,86.9,89.8,89.1,87.4]},
+  otifForn: [['AGROSUL INSUMOS',97.8],['DIESEL CERRADO',96.1],['SEMENTES VALE',93.4],['QUÍMICA PARANAÍBA',90.6],['HIDRÁULICA TRIÂNGULO',87.2],['BORRACHAS IT',84.5],['TRATORPEÇAS LTDA',79.3],['FERTIMINAS',72.8]],
+  gasto: {labels:['FERTIMINAS','DIESEL CERRADO','AGROSUL INSUMOS','QUÍMICA PARANAÍBA','TRATORPEÇAS LTDA','OUTROS'], v:[18,16,12,9,7,38]},
+  contratos: {v30:4, v60:7, v90:12, contrato:58, spot:42, lista:[
+    {n:'Diesel S10',f:'Diesel Cerrado',p:94,venc:'28/10'},
+    {n:'Fertilizantes NPK',f:'Fertiminas',p:88,venc:'15/11'},
+    {n:'Peças de colhedora',f:'Tratorpeças',p:76,venc:'02/12'},
+    {n:'Defensivos',f:'Química Paranaíba',p:61,venc:'20/01'},
+    {n:'Pneus agrícolas',f:'Borrachas IT',p:43,venc:'10/03'}
+  ]},
+  estoque: {abaixoPP:23, itens:[['DIESEL S10',4],['FACA DE CORTE COLHEDORA',6],['FIPRONIL',9],['UREIA',12],['ÓLEO HIDRÁULICO',15],['PNEU 23.1-26',18],['GLIFOSATO',21],['CLORETO DE POTÁSSIO',28]]},
+  orcamento: {labels:[['TRATOS','CULTURAIS'],['COLHEITA','MECAN.'],'CCT',['FORMAÇÃO','LAVOURA'],['MANUT.','FROTA'],'IRRIGAÇÃO'],
+              orc:[12.4,9.8,7.6,6.1,4.9,2.2], real:[10.1,8.3,6.4,4.2,4.6,1.5], periodo:75},
+  /* FORNECEDORES — safra atual (R$ milhões). lt = prazo médio real de entrega (dias), prom = prazo prometido,
+     otif = % entregue no prazo e completo, div = % de entregas com divergência (quantidade, material, NF, avaria) */
+  fornecedores: [
+    {n:'FERTIMINAS',          cat:'Fertilizantes',         g:17.3, lt:24, prom:15, otif:72.8, div:6.1},
+    {n:'DIESEL CERRADO',      cat:'Combustíveis',          g:15.4, lt:2,  prom:2,  otif:96.1, div:0.4},
+    {n:'AGROSUL INSUMOS',     cat:'Defensivos',            g:11.5, lt:8,  prom:10, otif:97.8, div:1.2},
+    {n:'QUÍMICA PARANAÍBA',   cat:'Defensivos',            g:8.6,  lt:12, prom:10, otif:90.6, div:2.8},
+    {n:'TRATORPEÇAS LTDA',    cat:'Peças de colhedora',    g:6.7,  lt:18, prom:7,  otif:79.3, div:5.4},
+    {n:'SEMENTES VALE',       cat:'Mudas e sementes',      g:5.8,  lt:9,  prom:10, otif:93.4, div:1.9},
+    {n:'HIDRÁULICA TRIÂNGULO',cat:'Mangueiras e conexões', g:4.6,  lt:11, prom:8,  otif:87.2, div:3.3},
+    {n:'BORRACHAS IT',        cat:'Pneus agrícolas',       g:3.8,  lt:14, prom:10, otif:84.5, div:2.1},
+    {n:'TRANSCANA FRETES',    cat:'Frete',                 g:3.1,  lt:1,  prom:1,  otif:95.0, div:0.8},
+    {n:'LUBRIMINAS',          cat:'Lubrificantes',         g:2.4,  lt:5,  prom:5,  otif:94.2, div:1.0}
+  ],
+  outros: {g:16.8, qtd:148},          // demais fornecedores ativos
+  entregasRecebidas: 1240,            // últimos 90 dias
+  ocorrencias: {labels:['ATRASO','QUANTIDADE DIVERGENTE','NOTA FISCAL DIVERGENTE','MATERIAL ERRADO','AVARIA / EMBALAGEM'], v:[46,17,14,9,6]},
+  metaLead: 10, metaDiv: 3,
+  /* histórico mensal (abr → out) para as linhas da visão geral */
+  hist: {
+    rcAbertas:[150,158,171,149,166,162,184], rcAntigas:[18,22,25,19,31,29,37],
+    atrasadasPct:[7.2,8.1,9.4,8.8,10.1,9.6,11.2], otif:[90.2,91.5,88.7,86.9,89.8,89.1,87.4],
+    lead:[6.4,6.0,6.3,5.9,6.2,6.1,5.6], saving:[0.82,1.05,0.91,1.12,0.88,0.94,1.27],
+    contrato:[49,51,53,52,54,55,58], emerg:[12.1,11.4,10.2,9.8,10.5,9.2,7.8]
+  },
+  /* MERCADO — v = valor de referência (usado quando não há internet ou API).
+     live = buscado automaticamente na internet. bom = direção boa para a usina.
+     pp = variação em pontos percentuais (taxas). */
+  mercado: [
+    {k:'usd',   n:'Dólar comercial',     pre:'R$ ', suf:'',      d:2, v:5.45, vol:.006, bom:'baixa', live:true,  fonte:'AwesomeAPI', per:'30 dias', imp:'Fertilizantes, defensivos e peças importadas'},
+    {k:'selic', n:'Selic',               pre:'',    suf:'% a.a.',d:2, v:14.25,vol:0,    bom:'baixa', live:true,  fonte:'Banco Central', per:'12 meses', pp:true, imp:'Custo do dinheiro e prazo de pagamento'},
+    {k:'ipca',  n:'IPCA 12 meses',       pre:'',    suf:'%',     d:2, v:4.60, vol:.02,  bom:'baixa', live:true,  fonte:'Banco Central', per:'12 meses', pp:true, imp:'Reajuste de contratos de serviço'},
+    {k:'igpm',  n:'IGP-M 12 meses',      pre:'',    suf:'%',     d:2, v:3.20, vol:.04,  bom:'baixa', live:true,  fonte:'Banco Central', per:'9 meses', pp:true, imp:'Reajuste de contratos e locações'},
+    {k:'brent', n:'Petróleo Brent',      pre:'US$ ',suf:'/bbl',  d:2, v:68.40,vol:.012, bom:'baixa', live:false, fonte:'ICE', per:'30 dias', imp:'Base do preço do diesel e do frete'},
+    {k:'diesel',n:'Diesel S10',          pre:'R$ ', suf:'/L',    d:2, v:6.05, vol:.003, bom:'baixa', live:false, fonte:'ANP', per:'30 dias', imp:'Frota agrícola, CCT e colheita'},
+    {k:'ureia', n:'Ureia',               pre:'US$ ',suf:'/t',    d:0, v:420,  vol:.01,  bom:'baixa', live:false, fonte:'Mercado', per:'30 dias', imp:'Adubação de cobertura da cana'},
+    {k:'kcl',   n:'Cloreto de potássio', pre:'US$ ',suf:'/t',    d:0, v:360,  vol:.008, bom:'baixa', live:false, fonte:'Mercado', per:'30 dias', imp:'Adubação da soqueira'},
+    {k:'acucar',n:'Açúcar cristal',      pre:'R$ ', suf:'/sc',   d:2, v:120.5,vol:.008, bom:'alta',  live:false, fonte:'Cepea', per:'30 dias', imp:'Receita da usina · saca de 50 kg'},
+    {k:'etanol',n:'Etanol hidratado',    pre:'R$ ', suf:'/L',    d:2, v:2.85, vol:.01,  bom:'alta',  live:false, fonte:'Cepea', per:'30 dias', imp:'Receita da usina · usinas de SP'}
+  ]
+};
+
+/* ========================================================= */
+const C = {or:'#FF7500',or2:'#FF9E1B',neu:'#CDD2BA',g1:'#00B74F',g2:'#00843D',g3:'#154734',red:'#D7261E',ink:'#1D2417',mut:'#5B6448'};
+const FONT = "'Barlow Condensed','DIN',sans-serif";
+const LBL = {ok:'NO ALVO',at:'ATENÇÃO',cr:'CRÍTICO'};
+const SC = {ok:C.g1,at:C.or2,cr:C.red};
+const params = new URLSearchParams(location.search);
+const DUR = (+params.get('t') || 15) * 1000;
+
+const fmtN = (v,d=0) => v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+function st(v,meta,dir,tol=.12){ // dir 'min' = quanto maior melhor; 'max' = quanto menor melhor
+  const good = dir==='min' ? v>=meta : v<=meta;
+  if(good) return 'ok';
+  const gap = dir==='min' ? (meta-v)/meta : (v-meta)/meta;
+  return gap <= tol ? 'at' : 'cr';
+}
+const covSt = d => d<7?'cr':d<15?'at':'ok';
+const pctSt = p => p>=90?'cr':p>=75?'at':'ok';
+
+function num(v,d=0,pre='',suf=''){
+  return `<span class="num" data-v="${v}" data-d="${d}" data-pre="${pre}" data-suf="${suf}">${pre}${fmtN(v,d)}${suf?`<small>${suf}</small>`:''}</span>`;
+}
+function kpi(o){
+  const s = o.st || 'nt';
+  return `<div class="card kpi s-${s} ${o.cls||''}">
+    <div class="kl">${o.label}</div>
+    <div class="kv">${num(o.v,o.d||0,o.pre||'',o.suf||'')}</div>
+    ${o.spark?`<div class="spark"><canvas id="${o.spark}"></canvas></div>`:''}
+    <div class="kf"><span class="meta">${o.meta||''}</span>${s!=='nt'?`<span class="chip">${LBL[s]}</span>`:''}</div>
+    ${o.sub?`<div class="ks">${o.sub}</div>`:''}
+  </div>`;
+}
+function countUp(el){
+  const v=+el.dataset.v, d=+el.dataset.d, pre=el.dataset.pre, suf=el.dataset.suf, t0=performance.now(), dur=1100;
+  (function step(t){
+    const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3);
+    el.innerHTML = pre+fmtN(v*e,d)+(suf?`<small>${suf}</small>`:'');
+    if(k<1) requestAnimationFrame(step);
+  })(t0);
+}
+
+/* ÍCONES sólidos */
+const I = {
+  grid:'<path d="M4 3h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm10 0h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM4 13h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1zm10 0h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"/>',
+  doc:'<path fill-rule="evenodd" d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.5V9h5.5zM8 13h8v2H8zm0 4h8v2H8z"/>',
+  cart:'<path d="M1 3h3.2l.7 3H22l-2.3 8.2a2 2 0 0 1-1.9 1.5H9a2 2 0 0 1-1.9-1.5z"/><circle cx="9.5" cy="20" r="2"/><circle cx="17.5" cy="20" r="2"/>',
+  truck:'<path d="M1 5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v2h3.6a2 2 0 0 1 1.6.8l2.4 3.2a2 2 0 0 1 .4 1.2V16a2 2 0 0 1-2 2h-1a3 3 0 0 1-6 0H9a3 3 0 0 1-6 0 2 2 0 0 1-2-2z"/>',
+  contract:'<path fill-rule="evenodd" d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm1.3 11.7 1.4-1.4 2.3 2.3 5.3-5.3 1.4 1.4-6.7 6.7z"/>',
+  box:'<path fill-rule="evenodd" d="M12 2 3 6.5v11L12 22l9-4.5v-11zm0 2.2 6.3 3.1L12 10.5 5.7 7.3z"/>',
+  coin:'<path fill-rule="evenodd" d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm1 4h-2v1.1c-1.7.4-3 1.6-3 3.2 0 2 1.7 2.7 3.6 3.1 1.6.4 2.4.7 2.4 1.5s-.9 1.3-2 1.3-2.1-.6-2.3-1.6H7.8c.2 1.7 1.5 2.9 3.2 3.3V19h2v-1.1c1.8-.4 3.1-1.6 3.1-3.3 0-2.1-1.8-2.8-3.7-3.2-1.5-.3-2.3-.6-2.3-1.3 0-.7.7-1.2 1.8-1.2s1.8.5 2 1.4h1.9c-.2-1.6-1.3-2.8-2.8-3.2z"/>'
+};
+I.star='<path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/>';
+I.bars='<path d="M3 21V11h4v10zm7 0V3h4v18zm7 0v-7h4v7z"/>';
+I.market='<path d="M3 3h2v16h16v2H3zm3.5 11.2 4.2-5.4 3.1 3 5-7 1.7 1.2-6.4 9-3.1-3-2.9 3.7z"/>';
+const svg = p => `<svg viewBox="0 0 24 24" fill="currentColor">${p}</svg>`;
+
+/* PLUGINS Chart.js: rótulos grandes e texto no centro da rosca */
+const valueLabels = {id:'vl', afterDatasetsDraw(c,a,o){
+  if(!o || !o.on) return;
+  const ctx=c.ctx, horiz=c.options.indexAxis==='y';
+  c.data.datasets.forEach((ds,i)=>{
+    const m=c.getDatasetMeta(i); if(m.hidden || ds.noLabel) return;
+    m.data.forEach((el,j)=>{
+      const v=ds.data[j]; if(v==null) return;
+      const t=o.fmt?o.fmt(v):fmtN(v);
+      ctx.save(); ctx.font=`700 ${o.size||28}px ${FONT}`; ctx.fillStyle=o.color||C.ink; ctx.strokeStyle='#fff'; ctx.lineWidth=7; ctx.lineJoin='round';
+      let x=el.x+12,y=el.y; if(horiz){ctx.textAlign='left';ctx.textBaseline='middle';}
+      else{ctx.textAlign='center';ctx.textBaseline='bottom';x=el.x;y=el.y-(c.config.type==='line'?16:8);}
+      ctx.strokeText(t,x,y); ctx.fillText(t,x,y);
+      ctx.restore();
+    });
+  });
+}};
+const centerText = {id:'center', afterDraw(c,a,o){
+  if(!o || !o.text) return;
+  const {ctx,chartArea:{left,right,top,bottom}}=c, x=(left+right)/2, y=(top+bottom)/2, s=o.size||70;
+  ctx.save(); ctx.textAlign='center';
+  ctx.font=`700 ${s}px ${FONT}`; ctx.fillStyle=C.g3; ctx.fillText(o.text,x,y+s*.22);
+  ctx.font=`700 24px ${FONT}`; ctx.fillStyle=C.mut; ctx.fillText(o.sub||'',x,y+s*.22+34);
+  ctx.restore();
+}};
+
+function baseOpts(extra={}){
+  return Object.assign({responsive:true,maintainAspectRatio:false,animation:{duration:1000,easing:'easeOutQuart'},
+    plugins:{legend:{display:false},tooltip:{enabled:false}}},extra);
+}
+const gridC='rgba(21,71,52,.08)';
+
+/* Linha pequena com preenchimento suave (sparkline) */
+function spark(id,data,color){
+  return new Chart(document.getElementById(id),{type:'line',
+    data:{labels:data.map((_,i)=>i),datasets:[{data,borderColor:color,borderWidth:4,tension:.35,fill:'start',
+      pointRadius:data.map((_,i)=>i===data.length-1?7:0),pointBackgroundColor:color,
+      backgroundColor:c=>{const {ctx,chartArea:a}=c.chart; if(!a) return 'transparent';
+        const g=ctx.createLinearGradient(0,a.top,0,a.bottom); g.addColorStop(0,color+'55'); g.addColorStop(1,color+'00'); return g;}}]},
+    options:baseOpts({animation:{duration:1400,easing:'easeOutCubic'},layout:{padding:{top:10,bottom:2,left:6,right:10}},
+      scales:{x:{display:false},y:{display:false,grace:'12%'}}})});
+}
+
+/* MERCADO: histórico de referência (passeio aleatório fixo) até a chegada dos dados ao vivo */
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function walk(end,n,vol,seed){const r=rng(seed),a=[end];for(let i=1;i<n;i++)a.unshift(a[0]*(1+(r()-.48)*2*vol));return a;}
+const MK={};
+D.mercado.forEach((m,i)=>{
+  m.h = m.k==='selic' ? [10.5,10.5,10.75,11.25,12.25,13.25,14.25,14.25,14.25,14.25,14.25,14.25]
+      : walk(m.v, m.pp?12:30, m.vol||.01, 101+i*7);
+  m.h[m.h.length-1]=m.v; m.ok=false; MK[m.k]=m;
+});
+const mVal = m => num(m.v,m.d,m.pre,m.suf);
+function mVar(m){
+  const h=m.h, dv = m.pp ? h[h.length-1]-h[0] : (h[h.length-1]/h[0]-1)*100;
+  if(Math.abs(dv)<0.05) return `<span style="color:${C.mut}">● estável em ${m.per}</span>`;
+  const good = m.bom==='baixa' ? dv<0 : dv>0;
+  return `<span style="color:${good?C.g2:C.red}">${dv>0?'▲':'▼'} ${fmtN(Math.abs(dv),2)}${m.pp?' p.p.':'%'}</span> <span style="color:${C.mut};font-weight:600">em ${m.per}</span>`;
+}
+
+/* =========================================================
+   TELAS
+   ========================================================= */
+const R=D.resumo, M=D.metas, A=D.anterior;
+const orcTot=D.orcamento.orc.reduce((a,b)=>a+b,0), realTot=D.orcamento.real.reduce((a,b)=>a+b,0);
+const orcPct=realTot/orcTot*100;
+/* Nota IQF (0–100): 50% no prazo + 30% qualidade (sem divergência) + 20% cumprimento do prazo prometido */
+const F=D.fornecedores.map(f=>({...f, nota:Math.round(.5*f.otif + .3*Math.max(0,100-f.div*10) + .2*Math.min(100,f.prom/f.lt*100))}));
+const gTot=F.reduce((a,f)=>a+f.g,0)+D.outros.g;
+F.forEach(f=>f.pct=f.g/gTot*100);
+const notaSt=n=>n>=90?'ok':n>=80?'at':'cr';
+const TXT={ok:C.g2,at:C.or,cr:C.red};
+let acc=0; const cum=F.map(f=>(acc+=f.pct)).concat(100);
+const n80=cum.findIndex(c=>c>=79.95)+1;
+const qtdAtivos=F.length+D.outros.qtd;
+const leadMedio=F.reduce((a,f)=>a+f.lt*f.g,0)/F.reduce((a,f)=>a+f.g,0);
+const divTot=D.ocorrencias.v.slice(1).reduce((a,b)=>a+b,0), divPct=divTot/D.entregasRecebidas*100;
+
+const SCREENS = [
+{ key:'geral', menu:'Visão geral', title:'Suprimentos Agrícola · Visão Geral', icon:I.grid,
+  style:'grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:1fr 1fr',
+  html:()=>[
+    kpi({spark:'sk1',label:'RCs em aberto',v:R.rcAbertas,st:st(R.rcAbertas,M.rcAbertas,'max'),meta:`META ≤ ${M.rcAbertas}`,sub:`Mês anterior: ${A.rcAbertas}`}),
+    kpi({spark:'sk2',label:'RCs sem pedido +15 dias',v:R.rcAntigas,st:st(R.rcAntigas,M.rcAntigas,'max'),meta:`META ≤ ${M.rcAntigas}`,sub:`Mês anterior: ${A.rcAntigas}`}),
+    kpi({spark:'sk3',label:'Entregas atrasadas',v:R.atrasadasPct,d:1,suf:'%',st:st(R.atrasadasPct,M.atrasadasPct,'max'),meta:`META ≤ ${M.atrasadasPct}%`,sub:`${D.pedidos.atrasados} pedidos · mês anterior ${fmtN(A.atrasadasPct,1)}%`}),
+    kpi({spark:'sk4',label:'OTIF fornecedores',v:R.otif,d:1,suf:'%',st:st(R.otif,M.otif,'min'),meta:`META ≥ ${M.otif}%`,sub:`Mês anterior: ${fmtN(A.otif,1)}%`}),
+    kpi({spark:'sk5',label:'Lead time RC → pedido',v:R.lead,d:1,suf:'dias',st:st(R.lead,M.lead,'max'),meta:`META ≤ ${M.lead} dias`,sub:`Mês anterior: ${fmtN(A.lead,1)} dias`}),
+    kpi({spark:'sk6',label:'Saving no mês',v:R.saving,d:2,pre:'R$ ',suf:'mi',st:st(R.saving,M.saving,'min'),meta:`META ≥ R$ ${fmtN(M.saving,1)} mi`,sub:`Mês anterior: R$ ${fmtN(A.saving,2)} mi`}),
+    kpi({spark:'sk7',label:'Gasto em contrato',v:R.contrato,suf:'%',st:st(R.contrato,M.contrato,'min'),meta:`META ≥ ${M.contrato}%`,sub:`Mês anterior: ${A.contrato}%`}),
+    kpi({spark:'sk8',label:'Compras emergenciais',v:R.emerg,d:1,suf:'%',st:st(R.emerg,M.emerg,'max'),meta:`META ≤ ${M.emerg}%`,sub:`Mês anterior: ${fmtN(A.emerg,1)}%`})
+  ].join(''),
+  charts:()=>{
+    const H=D.hist, cfg=[['sk1','rcAbertas','max'],['sk2','rcAntigas','max'],['sk3','atrasadasPct','max'],['sk4','otif','min'],
+      ['sk5','lead','max'],['sk6','saving','min'],['sk7','contrato','min'],['sk8','emerg','max']];
+    return cfg.map(([id,k,dir])=>spark(id,H[k],SC[st(R[k],M[k],dir)]));
+  }
+},
+{ key:'mkt', menu:'Mercado', title:'Mercado e Economia', icon:I.market,
+  style:'grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:1fr 1fr',
+  html:()=>D.mercado.map(m=>`<div class="card mk">
+      <div class="mh"><span class="mn">${m.n}</span><span class="src" id="src-${m.k}">REFERÊNCIA · ${m.fonte}</span></div>
+      <div class="mv" id="mv-${m.k}">${mVal(m)}</div>
+      <div class="mx" id="mx-${m.k}">${mVar(m)}</div>
+      <div class="spark"><canvas id="sp-${m.k}"></canvas></div>
+      <div class="imp">${m.imp}</div>
+    </div>`).join(''),
+  charts:()=>D.mercado.map(m=>(m.chart=spark('sp-'+m.k,m.h,C.or)))
+},
+{ key:'rc', menu:'Requisições', title:'Requisições de Compra', icon:I.doc,
+  style:'grid-template-columns:430px 1fr 1fr',
+  html:()=>`<div class="col">
+      ${kpi({label:'RCs em aberto',v:R.rcAbertas,st:st(R.rcAbertas,M.rcAbertas,'max'),meta:`META ≤ ${M.rcAbertas}`,cls:'sm'})}
+      ${kpi({label:'Sem pedido +15 dias',v:R.rcAntigas,st:st(R.rcAntigas,M.rcAntigas,'max'),meta:`META ≤ ${M.rcAntigas}`,cls:'sm'})}
+      ${kpi({label:'Idade média',v:D.idadeMedia,d:1,suf:'dias',cls:'sm',meta:'Desde a criação da RC'})}
+    </div>
+    <div class="card"><div class="ct">Envelhecimento das RCs abertas</div><div class="cw"><canvas id="cAging"></canvas></div></div>
+    <div class="card"><div class="ct">RCs abertas por comprador</div><div class="cw"><canvas id="cComp"></canvas></div></div>`,
+  charts:()=>[
+    new Chart(cAging,{type:'bar',data:{labels:D.aging.labels,datasets:[{data:D.aging.v,backgroundColor:[C.g1,C.or2,C.or,C.red],borderRadius:12,maxBarThickness:130}]},
+      options:baseOpts({layout:{padding:{top:50}},plugins:{legend:{display:false},tooltip:{enabled:false},vl:{on:true,size:44}},
+        scales:{y:{display:false,beginAtZero:true},x:{grid:{display:false},border:{display:false},ticks:{font:{size:26,weight:700},color:C.ink}}}})}),
+    new Chart(cComp,{type:'bar',data:{labels:D.compradores.labels,datasets:[{data:D.compradores.v,backgroundColor:C.or,borderRadius:10,maxBarThickness:60}]},
+      options:baseOpts({indexAxis:'y',layout:{padding:{right:70}},plugins:{legend:{display:false},tooltip:{enabled:false},vl:{on:true,size:34}},
+        scales:{x:{display:false,beginAtZero:true},y:{grid:{display:false},border:{display:false},ticks:{font:{size:26,weight:700},color:C.ink}}}})})
+  ]
+},
+{ key:'ped', menu:'Pedidos', title:'Pedidos e Entregas', icon:I.cart,
+  style:'grid-template-columns:repeat(3,1fr);grid-template-rows:290px 1fr',
+  html:()=>`
+    ${kpi({label:'Pedidos em aberto',v:D.pedidos.abertos,meta:`R$ ${fmtN(D.pedidos.valor,1)} mi em aberto`})}
+    ${kpi({label:'Entregas atrasadas',v:D.pedidos.atrasados,st:st(R.atrasadasPct,M.atrasadasPct,'max'),meta:`R$ ${fmtN(D.pedidos.valorAtras,1)} mi · ${fmtN(R.atrasadasPct,1)}% dos pedidos`})}
+    ${kpi({label:'Entregas previstas 7 dias',v:D.pedidos.semana,meta:'Itens com data de remessa'})}
+    <div class="card" style="grid-column:1/3"><div class="ct">Entregas previstas — próximos 7 dias</div><div class="cw"><canvas id="cEnt"></canvas></div></div>
+    <div class="card"><div class="ct">Maiores atrasos</div><div class="rows">
+      ${D.atrasos.map(a=>`<div class="ar"><div class="badge" style="background:${a.d>=7?C.red:C.or2}">${a.d}<small>d</small></div><div><b>${a.f}</b><span>${a.m}</span></div></div>`).join('')}
+    </div></div>`,
+  charts:()=>[
+    new Chart(cEnt,{type:'bar',data:{labels:D.entregas.labels,datasets:[{data:D.entregas.v,backgroundColor:D.entregas.v.map((v,i)=>i===0?C.or:C.g2),borderRadius:12,maxBarThickness:120}]},
+      options:baseOpts({layout:{padding:{top:50}},plugins:{legend:{display:false},tooltip:{enabled:false},vl:{on:true,size:42}},
+        scales:{y:{display:false,beginAtZero:true},x:{grid:{display:false},border:{display:false},ticks:{font:{size:26,weight:700},color:C.ink}}}})})
+  ]
+},
+{ key:'forn', menu:'Fornecedores', title:'Desempenho de Fornecedores', icon:I.truck,
+  style:'grid-template-columns:1.1fr 1fr;grid-template-rows:1fr 1fr',
+  html:()=>`
+    <div class="card"><div class="ct">OTIF mensal — no prazo e completo</div>
+      <div class="leg"><span><i style="background:${C.or}"></i>OTIF</span><span><i style="background:${C.g3}"></i>Meta ${M.otif}%</span></div>
+      <div class="cw"><canvas id="cOtif"></canvas></div></div>
+    <div class="card" style="grid-column:2;grid-row:1/3"><div class="ct">OTIF por fornecedor</div><div class="cw"><canvas id="cRank"></canvas></div></div>
+    <div class="card"><div class="ct">Concentração do gasto</div>
+      <div style="display:grid;grid-template-columns:1fr 1.1fr;gap:20px;flex:1;min-height:0">
+        <div class="cw"><canvas id="cGasto"></canvas></div>
+        <div class="dleg">${D.gasto.labels.map((l,i)=>`<div><i style="background:${[C.or,C.or2,C.g1,C.g2,C.g3,C.neu][i]}"></i>${l}<span>${D.gasto.v[i]}%</span></div>`).join('')}</div>
+      </div></div>`,
+  charts:()=>[
+    new Chart(cOtif,{type:'line',data:{labels:D.otifMes.labels,datasets:[
+        {data:D.otifMes.v,borderColor:C.or,backgroundColor:C.or,borderWidth:5,pointRadius:9,pointBackgroundColor:C.or,tension:.25},
+        {data:D.otifMes.v.map(()=>M.otif),borderColor:C.g3,borderWidth:3,borderDash:[10,8],pointRadius:0,noLabel:true}]},
+      options:baseOpts({layout:{padding:{top:40,left:10,right:20}},plugins:{legend:{display:false},tooltip:{enabled:false},vl:{on:true,size:28,fmt:v=>fmtN(v,1)}},
+        scales:{y:{min:80,max:100,grid:{color:gridC},border:{display:false},ticks:{font:{size:20},color:C.mut,stepSize:5}},x:{grid:{display:false},border:{display:false},ticks:{font:{size:24,weight:700},color:C.ink}}}})}),
+    new Chart(cRank,{type:'bar',data:{labels:D.otifForn.map(x=>x[0]),datasets:[{data:D.otifForn.map(x=>x[1]),backgroundColor:D.otifForn.map(x=>SC[st(x[1],M.otif,'min',.06)]),borderRadius:10,maxBarThickness:58}]},
+      options:baseOpts({indexAxis:'y',layout:{padding:{right:100}},plugins:{legend:{display:false},tooltip:{enabled:false},vl:{on:true,size:34,fmt:v=>fmtN(v,1)+'%'}},
+        scales:{x:{display:false,min:50,max:100},y:{grid:{display:false},border:{display:false},ticks:{font:{size:24,weight:700},color:C.ink}}}})}),
+    new Chart(cGasto,{type:'doughnut',data:{labels:D.gasto.labels,datasets:[{data:D.gasto.v,backgroundColor:[C.or,C.or2,C.g1,C.g2,C.g3,C.neu],borderWidth:4,borderColor:'#fff'}]},
+      options:baseOpts({cutout:'64%',plugins:{legend:{display:false},tooltip:{enabled:false},center:{text:(100-D.gasto.v[5])+'%',sub:'TOP 5',size:60}}})})
+  ]
+},
+{ key:'rel', menu:'Relação', title:'Principais Fornecedores · Relação', icon:I.star,
+  style:'grid-template-columns:1fr',
+  html:()=>`<div class="card" style="padding:18px 30px 10px">
+    <div class="sch"><span>#</span><span>Fornecedor</span><span>Gasto na safra</span><span>Prazo de entrega</span><span>No prazo</span><span>Divergências</span><span style="text-align:center">Nota IQF</span></div>
+    ${F.slice(0,6).map((f,i)=>{const lt=f.lt>f.prom*1.2?'cr':f.lt>f.prom?'at':'ok', ot=st(f.otif,M.otif,'min',.06), dv=f.div<=D.metaDiv?'ok':f.div<=5?'at':'cr', ns=notaSt(f.nota);
+      return `<div class="scr">
+        <div class="rk">${i+1}</div>
+        <div class="fn"><b>${f.n}</b><span>${f.cat}</span></div>
+        <div><div class="vv">R$ ${fmtN(f.g,1)}<small>mi · ${fmtN(f.pct,0)}%</small></div><div class="minibar"><div class="fill" data-w="${f.pct/F[0].pct*100}" style="width:0"></div></div></div>
+        <div><div class="vv" style="color:${TXT[lt]}">${f.lt}<small>dias</small></div><div class="vs">prometido ${f.prom} dias</div></div>
+        <div><div class="vv" style="color:${TXT[ot]}">${fmtN(f.otif,1)}<small>%</small></div></div>
+        <div><div class="vv" style="color:${TXT[dv]}">${fmtN(f.div,1)}<small>%</small></div><div class="vs">das entregas</div></div>
+        <div class="nota" style="border-color:${SC[ns]};color:${TXT[ns]}">${f.nota}</div>
+      </div>`;}).join('')}
+  </div>`
+},
+{ key:'abc', menu:'Curva ABC', title:'Fornecedores · Gasto e Entregas', icon:I.bars,
+  style:'grid-template-columns:1.45fr 1fr',
+  html:()=>`
+    <div class="card"><div class="ct">Curva ABC — quem concentra o gasto da safra (R$ mi)</div>
+      <div class="leg"><span><i style="background:${C.or}"></i>Classe A</span><span><i style="background:${C.or2}"></i>Classe B</span><span><i style="background:${C.neu}"></i>Demais</span><span><i style="background:${C.g3}"></i>% acumulado</span></div>
+      <div class="cw"><canvas id="cAbc"></canvas></div></div>
+    <div class="col">
+      <div class="row2" style="flex:1">
+        ${kpi({label:'Fornecedores com 80% do gasto',v:n80,meta:`de ${qtdAtivos} ativos`,cls:'xs'})}
+        ${kpi({label:'Maior dependência',v:F[0].pct,suf:'%',st:F[0].pct>15?'at':'ok',meta:F[0].n,cls:'xs'})}
+      </div>
+      <div class="row2" style="flex:1">
+        ${kpi({label:'Prazo médio de entrega',v:leadMedio,d:1,suf:'dias',st:st(leadMedio,D.metaLead,'max'),meta:`META ≤ ${D.metaLead}`,cls:'xs'})}
+        ${kpi({label:'Entregas com divergência',v:divPct,d:1,suf:'%',st:st(divPct,D.metaDiv,'max'),meta:`META ≤ ${D.metaDiv}%`,cls:'xs'})}
+      </div>
+      <div class="card" style="flex:1.7"><div class="ct">Problemas nas entregas · 90 dias</div><div class="cw"><canvas id="cOco"></canvas></div></div>
+    </div>`,
+  charts:()=>{
+    const lab=F.map(f=>f.n.split(' ')[0]).concat(`OUTROS (${D.outros.qtd})`).map((n,i)=>i%2?['',n]:n); // nomes alternados em 2 alturas
+    const val=F.map(f=>f.g).concat(D.outros.g);
+    const col=cum.map((c,i)=>i===cum.length-1?C.neu:c<=80.05?C.or:C.or2);
+    return [
+      new Chart(cAbc,{type:'bar',data:{labels:lab,datasets:[
+          {type:'line',data:cum,yAxisID:'y2',borderColor:C.g3,backgroundColor:C.g3,borderWidth:4,pointRadius:6,tension:.2,noLabel:true,order:0},
+          {type:'line',data:cum.map(()=>80),yAxisID:'y2',borderColor:C.g3,borderWidth:2,borderDash:[8,8],pointRadius:0,noLabel:true,order:1},
+          {data:val,backgroundColor:col,borderRadius:8,maxBarThickness:70,order:2}]},
+        options:baseOpts({layout:{padding:{top:40}},plugins:{legend:{display:false},tooltip:{enabled:false},vl:{on:true,size:26,fmt:v=>fmtN(v,1)}},
+          scales:{y:{display:false,beginAtZero:true},y2:{position:'right',min:0,max:105,grid:{display:false},border:{display:false},ticks:{stepSize:20,font:{size:18},color:C.mut,callback:v=>v<=100?v+'%':''}},
+            x:{grid:{display:false},border:{display:false},ticks:{autoSkip:false,font:{size:16,weight:700},color:C.ink}}}})}),
+      new Chart(cOco,{type:'bar',data:{labels:D.ocorrencias.labels,datasets:[{data:D.ocorrencias.v,backgroundColor:D.ocorrencias.v.map((_,i)=>i===0?C.red:C.or),borderRadius:8,maxBarThickness:44}]},
+        options:baseOpts({indexAxis:'y',layout:{padding:{right:60}},plugins:{legend:{display:false},tooltip:{enabled:false},vl:{on:true,size:28}},
+          scales:{x:{display:false,beginAtZero:true},y:{grid:{display:false},border:{display:false},ticks:{font:{size:19,weight:700},color:C.ink}}}})})
+    ];
+  }
+},
+{ key:'ctr', menu:'Contratos', title:'Contratos', icon:I.contract,
+  style:'grid-template-columns:repeat(3,1fr);grid-template-rows:280px 1fr',
+  html:()=>`
+    ${kpi({label:'Vencem em até 30 dias',v:D.contratos.v30,st:'cr',meta:'Renovar ou substituir já'})}
+    ${kpi({label:'Vencem em 31 a 60 dias',v:D.contratos.v60,st:'at',meta:'Iniciar negociação'})}
+    ${kpi({label:'Vencem em 61 a 90 dias',v:D.contratos.v90,st:'ok',meta:'Planejar renovação'})}
+    <div class="card" style="grid-column:1/3"><div class="ct">Saldo consumido dos contratos</div><div class="rows">
+      ${D.contratos.lista.map(c=>`<div class="pr"><div class="nm">${c.n}<em>${c.f} · vence ${c.venc}</em></div><div class="pc" style="color:${pctSt(c.p)==='cr'?C.red:C.ink}">${c.p}%</div>
+        <div class="track"><div class="fill" data-w="${c.p}" style="width:0;background:${SC[pctSt(c.p)]}"></div></div></div>`).join('')}
+    </div></div>
+    <div class="card"><div class="ct">Gasto: contrato x spot</div>
+      <div class="leg"><span><i style="background:${C.g2}"></i>Contrato</span><span><i style="background:${C.or}"></i>Spot</span></div>
+      <div class="cw"><canvas id="cSpot"></canvas></div></div>`,
+  charts:()=>[
+    new Chart(cSpot,{type:'doughnut',data:{labels:['CONTRATO','SPOT'],datasets:[{data:[D.contratos.contrato,D.contratos.spot],backgroundColor:[C.g2,C.or],borderWidth:4,borderColor:'#fff'}]},
+      options:baseOpts({cutout:'66%',plugins:{legend:{display:false},tooltip:{enabled:false},center:{text:D.contratos.contrato+'%',sub:`META ${M.contrato}%`,size:84}}})})
+  ]
+},
+{ key:'est', menu:'Estoque', title:'Estoque Crítico · Insumos-chave', icon:I.box,
+  style:'grid-template-columns:1.6fr 1fr',
+  html:()=>`
+    <div class="card"><div class="ct">Cobertura de estoque em dias de consumo</div>
+      <div class="leg"><span><i style="background:${C.red}"></i>Menos de 7 dias</span><span><i style="background:${C.or2}"></i>7 a 14 dias</span><span><i style="background:${C.g1}"></i>15 dias ou mais</span></div>
+      <div class="cw"><canvas id="cCob"></canvas></div></div>
+    <div class="col">
+      ${kpi({label:'Itens abaixo do ponto de pedido',v:D.estoque.abaixoPP,st:'at',meta:'Insumos agrícolas monitorados'})}
+      ${kpi({label:'Insumos com menos de 7 dias',v:D.estoque.itens.filter(x=>x[1]<7).length,st:'cr',meta:D.estoque.itens.filter(x=>x[1]<7).map(x=>x[0]).join(' · ')})}
+    </div>`,
+  charts:()=>[
+    new Chart(cCob,{type:'bar',data:{labels:D.estoque.itens.map(x=>x[0]),datasets:[{data:D.estoque.itens.map(x=>x[1]),backgroundColor:D.estoque.itens.map(x=>SC[covSt(x[1])]),borderRadius:10,maxBarThickness:56}]},
+      options:baseOpts({indexAxis:'y',layout:{padding:{right:120}},plugins:{legend:{display:false},tooltip:{enabled:false},vl:{on:true,size:34,fmt:v=>v+' dias'}},
+        scales:{x:{display:false,beginAtZero:true},y:{grid:{display:false},border:{display:false},ticks:{font:{size:24,weight:700},color:C.ink}}}})})
+  ]
+},
+{ key:'orc', menu:'Orçamento', title:'Orçamento · Orçado x Realizado', icon:I.coin,
+  style:'grid-template-columns:1.6fr 1fr',
+  html:()=>{const s=st(orcPct,D.orcamento.periodo,'max');return `
+    <div class="card"><div class="ct">Por centro de custo (R$ milhões)</div>
+      <div class="leg"><span><i style="background:${C.or}"></i>Orçado</span><span><i style="background:${C.g2}"></i>Realizado</span></div>
+      <div class="cw"><canvas id="cOrc"></canvas></div></div>
+    <div class="col">
+      <div class="card kpi s-${s}" style="flex:1.4">
+        <div class="kl">Orçamento consumido na safra</div>
+        <div class="big" style="color:${s==='cr'?C.red:C.ink}">${num(orcPct,0,'','%')}</div>
+        <div class="bars2">
+          <div><label><span>Consumido</span><span>${fmtN(orcPct,0)}%</span></label><div class="track"><div class="fill" data-w="${orcPct}" style="width:0;background:${SC[s]}"></div></div></div>
+          <div><label><span>Período decorrido</span><span>${D.orcamento.periodo}%</span></label><div class="track"><div class="fill" data-w="${D.orcamento.periodo}" style="width:0;background:${C.neu}"></div></div></div>
+        </div>
+        <div class="kf" style="margin-top:14px"><span class="meta">Consumo acima do ritmo do período</span><span class="chip">${LBL[s]}</span></div>
+      </div>
+      ${kpi({label:'Saldo disponível',v:orcTot-realTot,d:1,pre:'R$ ',suf:'mi',meta:`de R$ ${fmtN(orcTot,1)} mi orçados`,cls:'sm'})}
+    </div>`},
+  charts:()=>[
+    new Chart(cOrc,{type:'bar',data:{labels:D.orcamento.labels,datasets:[
+        {data:D.orcamento.orc,backgroundColor:C.or,borderRadius:8,maxBarThickness:70},
+        {data:D.orcamento.real,backgroundColor:C.g2,borderRadius:8,maxBarThickness:70}]},
+      options:baseOpts({layout:{padding:{top:44}},plugins:{legend:{display:false},tooltip:{enabled:false},vl:{on:true,size:26,fmt:v=>fmtN(v,1)}},
+        scales:{y:{display:false,beginAtZero:true},x:{grid:{display:false},border:{display:false},ticks:{font:{size:21,weight:700},color:C.ink}}}})})
+  ]
+}
+];
+
+/* ALERTAS do rodapé (gerados a partir dos dados) */
+function alertas(){
+  const a=[];
+  D.estoque.itens.filter(x=>x[1]<7).forEach(x=>a.push(`${x[0]} com cobertura de ${x[1]} dias de estoque`));
+  if(D.contratos.v30) a.push(`${D.contratos.v30} contratos vencem nos próximos 30 dias`);
+  D.contratos.lista.filter(c=>c.p>=90).forEach(c=>a.push(`Contrato ${c.n} (${c.f}) com ${c.p}% do saldo consumido`));
+  D.atrasos.filter(x=>x.d>=7).forEach(x=>a.push(`${x.f}: ${x.m.toLowerCase()} com ${x.d} dias de atraso`));
+  F.slice(0,6).filter(f=>notaSt(f.nota)==='cr').forEach(f=>a.push(`${f.n}: nota ${f.nota} com ${fmtN(f.pct,0)}% do gasto da safra`));
+  if(R.rcAntigas>M.rcAntigas) a.push(`${R.rcAntigas} RCs sem pedido há mais de 15 dias (meta ≤ ${M.rcAntigas})`);
+  if(R.otif<M.otif) a.push(`OTIF do mês em ${fmtN(R.otif,1)}% (meta ${M.otif}%)`);
+  if(orcPct>D.orcamento.periodo) a.push(`Orçamento consumido em ${fmtN(orcPct,0)}% com ${D.orcamento.periodo}% do período decorrido`);
+  return a;
+}
+
+/* =========================================================
+   MONTAGEM, RELÓGIO E ROTAÇÃO
+   ========================================================= */
+const stage=document.getElementById('stage'), main=document.getElementById('main'), menu=document.getElementById('menu');
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);stage.style.transform=`translate(-50%,-50%) scale(${s})`;}
+addEventListener('resize',fit); fit();
+
+function relogio(){
+  const n=new Date();
+  hora.textContent=n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  data.textContent=n.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+}
+setInterval(relogio,1000); relogio();
+upd.textContent=D.atualizado;
+
+const tt=document.getElementById('tt');
+function ticker(){
+  const mk=D.mercado.map(m=>{
+    const h=m.h, up=h[h.length-1]>=h[0];
+    return `<i>${m.n.toUpperCase()}</i>${m.pre}${fmtN(m.v,m.d)}${m.suf} ${up?'▲':'▼'}`;
+  });
+  tt.innerHTML=[...alertas(),...mk].map(x=>`<span>${x}</span>`).join('<b>●</b>');
+  tt.style.animationDuration=Math.max(40,tt.textContent.length*0.17)+'s';
+}
+ticker();
+
+/* =========================================================
+   DADOS AO VIVO (quando o PC da TV tem internet)
+   Dólar: AwesomeAPI · Selic, IPCA e IGP-M: Banco Central (SGS)
+   Se falhar, a tela continua com os valores de referência.
+   ========================================================= */
+const getJSON = u => fetch(u,{cache:'no-store'}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json();});
+const bcb = (s,n) => getJSON(`https://api.bcb.gov.br/dados/serie/bcdata.sgs.${s}/dados/ultimos/${n}?formato=json`).then(a=>a.map(x=>parseFloat(String(x.valor).replace(',','.'))));
+
+function setMk(k,h,v){
+  const m=MK[k]; if(!h || !h.length || h.some(isNaN)) return;
+  m.h=h; m.v=(v!=null&&!isNaN(v))?v:h[h.length-1]; m.ok=true;
+  const mv=document.getElementById('mv-'+k), mx=document.getElementById('mx-'+k), src=document.getElementById('src-'+k);
+  if(mv) mv.innerHTML=mVal(m);
+  if(mx) mx.innerHTML=mVar(m);
+  if(src){src.textContent='● AO VIVO · '+m.fonte; src.classList.add('live');}
+  if(m.chart){
+    const ds=m.chart.data.datasets[0];
+    m.chart.data.labels=h.map((_,i)=>i); ds.data=h; ds.pointRadius=h.map((_,i)=>i===h.length-1?7:0);
+    m.chart.update();
+  }
+  ticker();
+}
+
+async function aoVivo(){
+  const jobs=[
+    getJSON('https://economia.awesomeapi.com.br/json/daily/USD-BRL/30').then(a=>setMk('usd',a.map(x=>+x.bid).reverse())),
+    Promise.all([bcb(432,1),bcb(4189,12)]).then(([v,h])=>setMk('selic',h,v[0])),
+    bcb(13522,12).then(h=>setMk('ipca',h)),
+    bcb(189,20).then(m=>{ // IGP-M mensal → acumulado em 12 meses
+      const r=[]; for(let i=11;i<m.length;i++){let p=1;for(let j=i-11;j<=i;j++)p*=1+m[j]/100;r.push((p-1)*100);} setMk('igpm',r);
+    })
+  ];
+  await Promise.allSettled(jobs);
+}
+
+let cur=0, t0=performance.now(), paused=false, elapsed=0;
+
+function build(){
+  Chart.register(valueLabels,centerText);
+  Chart.defaults.font.family=FONT; Chart.defaults.font.size=22; Chart.defaults.font.weight=600;
+  Chart.defaults.color=C.mut; Chart.defaults.scale.ticks.maxRotation=0; Chart.defaults.devicePixelRatio=Math.max(2,window.devicePixelRatio||1);
+  SCREENS.forEach((s,i)=>{
+    s.el=document.createElement('section'); s.el.className='screen'; s.el.style.cssText=s.style; s.el.innerHTML=s.html();
+    main.appendChild(s.el);
+    const m=document.createElement('div'); m.className='mi'; m.innerHTML=svg(s.icon)+`<span>${s.menu}</span>`;
+    m.onclick=()=>show(i); menu.appendChild(m); s.mi=m;
+  });
+  SCREENS.forEach(s=>{ s.ch = s.charts ? s.charts() : []; });
+  const ini=+params.get('tela'); show(ini?ini-1:0);
+  requestAnimationFrame(tick);
+  aoVivo(); setInterval(aoVivo,10*60*1000); // atualiza o mercado a cada 10 minutos
+}
+
+function show(i){
+  cur=(i+SCREENS.length)%SCREENS.length;
+  SCREENS.forEach((s,j)=>{s.el.classList.toggle('on',j===cur); s.mi.classList.toggle('on',j===cur);});
+  const s=SCREENS[cur];
+  document.getElementById('htitle').textContent=s.title;
+  document.getElementById('hicon').innerHTML=svg(s.icon);
+  s.ch.forEach(c=>{c.reset();c.update();});
+  s.el.querySelectorAll('.num').forEach(countUp);
+  s.el.querySelectorAll('.fill').forEach(f=>{f.style.transition='none';f.style.width='0';void f.offsetWidth;f.style.transition='';f.style.width=f.dataset.w+'%';});
+  t0=performance.now(); elapsed=0;
+}
+
+function tick(now){
+  if(!paused){
+    const p=(now-t0)/DUR;
+    bar.style.transform=`scaleX(${Math.min(p,1)})`;
+    if(p>=1) show(cur+1);
+  }
+  requestAnimationFrame(tick);
+}
+
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') show(cur+1);
+  else if(e.key==='ArrowLeft') show(cur-1);
+  else if(e.code==='Space'){
+    e.preventDefault(); paused=!paused; document.body.classList.toggle('paused',paused);
+    if(paused) elapsed=performance.now()-t0; else t0=performance.now()-elapsed;
+  }
+  else if(e.key==='f'||e.key==='F'){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.();
+  }
+});
+
+(document.fonts?document.fonts.ready:Promise.resolve()).then(build);
+</script>
+</body>
+</html>
